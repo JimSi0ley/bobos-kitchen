@@ -5,9 +5,7 @@ from functions_web import add_recipe, get_recipe, get_all_recipes, delete_recipe
 from utils import format_cook_time
 import os
 from dotenv import load_dotenv
-import ocr
-from recipe_parser import parse_recipe
-import cv2
+from recipe_parser import parse_recipe_images
 from urllib.parse import urljoin, urlparse
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
@@ -403,7 +401,6 @@ def import_recipe():
 
         recipe_files = request.files.getlist("recipe_files")
 
-        # Remove empty file inputs.
         recipe_files = [
             recipe_file
             for recipe_file in recipe_files
@@ -417,8 +414,6 @@ def import_recipe():
                 extracted_pages=None,
                 error="Please select at least one recipe image."
             )
-
-        extracted_pages = []
 
         for page_number, recipe_file in enumerate(
             recipe_files,
@@ -440,132 +435,40 @@ def import_recipe():
                     )
                 )
 
-            try:
-                page_text = ocr.extract_recipe(recipe_file)
-
-            except ValueError as error:
-                app.logger.exception(
-                    "OCR validation failed for page %s: %s",
-                    page_number,
-                    filename
-                )
-
-                return render_template(
-                    "import_recipe.html",
-                    extracted_text=None,
-                    extracted_pages=extracted_pages or None,
-                    error=(
-                        f'Page {page_number}, "{filename}", could not '
-                        "be read. Make sure the image is clear, upright, "
-                        "and contains visible recipe text."
-                    )
-                )
-
-            except cv2.error:
-                app.logger.exception(
-                    "OpenCV failed while processing page %s: %s",
-                    page_number,
-                    filename
-                )
-
-                return render_template(
-                    "import_recipe.html",
-                    extracted_text=None,
-                    extracted_pages=extracted_pages or None,
-                    error=(
-                        f'Page {page_number}, "{filename}", could not '
-                        "be processed as an image. Try saving it again "
-                        "as a JPG or PNG file."
-                    )
-                )
-
-            except Exception:
-                app.logger.exception(
-                    "Unexpected OCR error on page %s: %s",
-                    page_number,
-                    filename
-                )
-
-                return render_template(
-                    "import_recipe.html",
-                    extracted_text=None,
-                    extracted_pages=extracted_pages or None,
-                    error=(
-                        f"Something went wrong while reading page "
-                        f'{page_number}, "{filename}". Please try again.'
-                    )
-                )
-
-            page_text = page_text.strip()
-
-            if not page_text:
-                return render_template(
-                    "import_recipe.html",
-                    extracted_text=None,
-                    extracted_pages=extracted_pages or None,
-                    error=(
-                        f'No readable text was found on page {page_number}, '
-                        f'"{filename}". Try using a clearer or closer image.'
-                    )
-                )
-
-            extracted_pages.append(
-                {
-                    "page_number": page_number,
-                    "filename": filename,
-                    "text": page_text
-                }
+        try:
+            parsed_recipe = parse_recipe_images(
+                recipe_files
             )
 
-        extracted_text = "\n\n".join(
-            page["text"]
-            for page in extracted_pages
-        ).strip()
+        except ValueError as error:
+            app.logger.exception(
+                "Recipe image import failed: %s",
+                error
+            )
 
-        if not extracted_text:
             return render_template(
                 "import_recipe.html",
                 extracted_text=None,
-                extracted_pages=extracted_pages,
+                extracted_pages=None,
                 error=(
-                    "No readable recipe text was found in the uploaded "
-                    "images. Try using clearer, brighter photos."
-                )
-            )
-
-        try:
-            parsed_recipe = parse_recipe(extracted_text)
-
-        except ValueError:
-            app.logger.exception(
-                "The AI parser could not create a structured recipe."
-            )
-
-            return render_template(
-                "import_recipe.html",
-                extracted_text=extracted_text,
-                extracted_pages=extracted_pages,
-                error=(
-                    "The text was found, but BoBo's Kitchen could not "
-                    "organize it into a complete recipe. Make sure the "
-                    "uploaded pages contain a title, ingredients, and "
-                    "instructions."
+                    "BoBo's Kitchen could not read and organize those "
+                    "recipe images. Make sure the pages are clear, upright, "
+                    "and selected in the correct order."
                 )
             )
 
         except Exception:
             app.logger.exception(
-                "Unexpected AI parsing error."
+                "Unexpected recipe image import error."
             )
 
             return render_template(
                 "import_recipe.html",
-                extracted_text=extracted_text,
-                extracted_pages=extracted_pages,
+                extracted_text=None,
+                extracted_pages=None,
                 error=(
-                    "The recipe text was read successfully, but the AI "
-                    "service could not organize it right now. Please try "
-                    "again in a moment."
+                    "The recipe import service is unavailable right now. "
+                    "Please try again in a moment."
                 )
             )
 

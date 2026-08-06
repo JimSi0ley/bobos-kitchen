@@ -1,18 +1,15 @@
 import os
+import base64
 
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
 
-# Load variables from the project's .env file.
 load_dotenv()
 
 
 class ParsedRecipe(BaseModel):
-    """
-    Describes the exact recipe fields that the AI must return.
-    """
 
     title: str = Field(
         description="The recipe's title."
@@ -51,55 +48,90 @@ class ParsedRecipe(BaseModel):
     )
 
 
-def parse_recipe(ocr_text):
-    """
-    Convert disorganized OCR text into structured recipe information.
+def parse_recipe_images(recipe_files):
 
-    Args:
-        ocr_text: Raw OCR text from one or more recipe pages.
-
-    Returns:
-        A ParsedRecipe object containing the organized recipe fields.
-    """
-
-    if not ocr_text or not ocr_text.strip():
-        raise ValueError("No OCR text was provided.")
+    if not recipe_files:
+        raise ValueError("No recipe images were provided.")
 
     api_key = os.getenv("OPENAI_API_KEY")
 
     if not api_key:
         raise ValueError(
-            "OPENAI_API_KEY was not found. Check the project's .env file."
+            "OPENAI_API_KEY was not found."
         )
 
     client = OpenAI(api_key=api_key)
 
+    content = [
+        {
+            "type": "input_text",
+            "text": (
+                "Read the attached recipe image or images. "
+                "The images are supplied in page order. "
+                "Extract and organize the recipe."
+            )
+        }
+    ]
+
+    for recipe_file in recipe_files:
+
+        image_bytes = recipe_file.read()
+
+        if not image_bytes:
+            raise ValueError(
+                f'"{recipe_file.filename}" is empty.'
+            )
+
+        extension = recipe_file.filename.rsplit(".", 1)[-1].lower()
+
+        if extension == "jpg":
+            extension = "jpeg"
+
+        encoded_image = base64.b64encode(
+            image_bytes
+        ).decode("utf-8")
+
+        content.append(
+            {
+                "type": "input_image",
+                "image_url": (
+                    f"data:image/{extension};base64,"
+                    f"{encoded_image}"
+                )
+            }
+        )
+
     response = client.responses.parse(
         model="gpt-5",
         instructions=(
-            "You organize OCR text extracted from printed recipes. "
-            "The OCR may contain words in the wrong order, broken lines, "
-            "duplicate fragments, website addresses, author information, "
-            "advertisements, headers, footers, or recognition errors. "
-            "\n\n"
-            "Extract only the actual recipe. Reconstruct its intended "
-            "reading order using headings, quantities, step numbers, and "
-            "context. Remove obvious website navigation, author biographies, "
-            "URLs, advertisements, and unrelated page content. "
-            "\n\n"
-            "Do not invent missing ingredients, quantities, temperatures, "
-            "or instructions. Correct obvious OCR spelling errors only when "
-            "the intended word is clear from context. "
-            "\n\n"
-            "For cook time, use the active Cook Time when explicitly given. "
-            "Do not use total time, freezing time, chilling time, or prep time "
-            "as the cook time. If no active cook time can be determined, "
-            "return 0 hours and 0 minutes."
+            "You extract recipes from photographs, screenshots, "
+            "scanned cookbook pages, and printed recipe pages. "
+
+            "The user may provide multiple images belonging to one "
+            "recipe. Treat them as consecutive pages in the order "
+            "provided. "
+
+            "Extract only the actual recipe. Ignore advertisements, "
+            "website navigation, author biographies, URLs, headers, "
+            "footers, and unrelated page content. "
+
+            "Preserve ingredient quantities and units. Organize the "
+            "instructions into numbered steps. "
+
+            "Do not invent missing ingredients, quantities, "
+            "temperatures, or instructions. "
+
+            "For cook time, use the active Cook Time when explicitly "
+            "given. Do not use total time, freezing time, chilling "
+            "time, or prep time as cook time. If active cook time "
+            "cannot be determined, return 0 hours and 0 minutes."
         ),
-        input=(
-            "Organize the following raw OCR text into a recipe:\n\n"
-            f"{ocr_text}"
-        ),
+        input=[
+            {
+                "role": "user",
+                "content": content
+            }
+        ],
         text_format=ParsedRecipe
     )
 
