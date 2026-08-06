@@ -64,14 +64,14 @@ def login():
         stored_password_hash = os.getenv("ADMIN_PASSWORD_HASH")
 
         if (
-            username == os.getenv("ADMIN_USERNAME")
-            and
-            stored_password_hash
-            and
-            check_password_hash(
-                stored_password_hash,
-                password
-            )
+                username.lower() == os.getenv("ADMIN_USERNAME").lower()
+                and
+                stored_password_hash
+                and
+                check_password_hash(
+                    stored_password_hash,
+                    password
+                )
         ):
 
             login_user(
