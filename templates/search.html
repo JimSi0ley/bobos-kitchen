@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}
+Search Recipes
+{% endblock %}
+
+{% block content %}
+
+<h1>Search Recipes</h1>
+
+<form
+    class="search-form"
+    method="GET"
+    action="{{ url_for('search') }}"
+>
+
+    <label for="keyword">Search:</label><br>
+
+    <input
+        type="text"
+        id="keyword"
+        name="keyword"
+        value="{{ keyword }}"
+        placeholder="Enter a recipe title, ingredient, or category"
+    >
+
+    <button type="submit">Search</button>
+
+</form>
+
+<br>
+
+{% if keyword %}
+
+    <h2>Results for "{{ keyword }}"</h2>
+
+    {% for recipe in recipes %}
+
+        <hr>
+
+        <h3>
+            <a href="/recipe/{{ recipe.id }}">
+                {{ recipe[1] }}
+            </a>
+        </h3>
+
+        <p><strong>Category:</strong> {{ recipe[2] }}</p>
+        <p><strong>Cook Time:</strong> {{ recipe[3] }} minutes</p>
+
+    {% else %}
+
+        <p>No matching recipes found.</p>
+
+    {% endfor %}
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}
+Page Not Found
+{% endblock %}
+
+{% block content %}
+
+<div class="error-page">
+
+    <div class="error-code">
+        404
+    </div>
+
+    <h1>Page Not Found</h1>
+
+    <p>
+        Sorry, BoBo's Kitchen could not find the page you requested.
+    </p>
+
+    <div class="error-page-actions">
+
+        <a
+            class="button"
+            href="{{ url_for('home') }}"
+        >
+            Return Home
+        </a>
+
+        <a
+            class="button button-secondary"
+            href="{{ url_for('recipes') }}"
+        >
+            View Recipes
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

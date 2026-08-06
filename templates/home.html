@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}
+BoBo's Kitchen
+{% endblock %}
+
+{% block content %}
+
+<section class="home-screen">
+
+    <div class="home-content">
+
+        <div class="home-logo">
+            <img
+                src="{{ url_for('static', filename='images/bobos-logo.png') }}"
+                alt="BoBo's Kitchen Logo"
+                class="home-logo-image"
+            >
+        </div>
+
+        <nav class="home-menu">
+
+            <a
+                class="home-menu-link"
+                href="{{ url_for('recipes') }}"
+            >
+                View Recipes
+            </a>
+
+            <a
+                class="home-menu-link"
+                href="{{ url_for('search') }}"
+            >
+                Search Recipes
+            </a>
+
+            <a
+                class="home-menu-link"
+                href="{{ url_for('favorites') }}"
+            >
+                ⭐ Favorite Recipes
+            </a>
+
+            <a
+                class="home-menu-link"
+                href="{{ url_for('random_recipe') }}"
+            >
+                🎲 Surprise Me
+            </a>
+
+            <div class="home-divider"></div>
+
+            {% if current_user.is_authenticated %}
+
+                <a
+                    class="home-menu-link"
+                    href="{{ url_for('add') }}"
+                >
+                    Add Recipe
+                </a>
+
+                <a
+                    class="home-menu-link"
+                    href="{{ url_for('import_recipe') }}"
+                >
+                    Import Recipe
+                </a>
+
+                <div class="home-divider"></div>
+                
+                <div class="home-admin-status">
+                    👤 Logged in as {{ current_user.id }}
+                </div>
+
+                <a
+                    class="home-menu-link"
+                    href="{{ url_for('logout') }}"
+                >
+                    Logout
+                </a>
+
+            {% else %}
+
+                <a
+                    class="home-menu-link"
+                    href="{{ url_for('login') }}"
+                >
+                    🔒 Login
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+    </div>
+
+</section>
+
+{% endblock %}

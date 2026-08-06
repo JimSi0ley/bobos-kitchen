@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}BoBo's Kitchen{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+{% if not hide_nav %}
+
+<header class="site-header">
+
+    <div class="nav-container">
+
+        <div class="nav-left">
+
+            <a
+                href="{{ url_for('home') }}"
+                class="mobile-home-logo"
+            >
+
+                <img
+                    src="{{ url_for('static', filename='images/bobo-face.png') }}"
+                    alt="BoBo"
+                    class="nav-logo"
+                >
+
+                <span class="mobile-home-text">
+                    BoBo's Kitchen
+                </span>
+
+            </a>
+
+            <nav>
+
+                <a href="{{ url_for('recipes') }}">
+                    Recipes
+                </a>
+
+                <a href="{{ url_for('search') }}">
+                    Search
+                </a>
+
+                <a href="{{ url_for('favorites') }}">
+                    Favorites
+                </a>
+
+                <a href="{{ url_for('random_recipe') }}">
+                    Random Recipe
+                </a>
+
+                {% if current_user.is_authenticated %}
+
+                    <a href="{{ url_for('add') }}">
+                        Add Recipe
+                    </a>
+
+                    <a href="{{ url_for('import_recipe') }}">
+                        Import Recipe
+                    </a>
+
+                {% else %}
+
+                    <a href="{{ url_for('login') }}">
+                        Login
+                    </a>
+
+                {% endif %}
+
+            </nav>
+
+        </div>
+
+        <div class="nav-right">
+
+            {% if current_user.is_authenticated %}
+
+                <div class="admin-status">
+                    👤 {{ current_user.id }}
+                </div>
+
+                <a
+                    class="logout-link"
+                    href="{{ url_for('logout') }}"
+                >
+                    Logout
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</header>
+
+{% endif %}
+
+<main class="{% if hide_nav %}home-page-container{% else %}page-container{% endif %}">
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer class="site-footer">
+    <p>BoBo's Kitchen Recipe Collection</p>
+</footer>
+
+</body>
+</html>

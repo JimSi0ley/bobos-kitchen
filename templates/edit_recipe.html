@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Recipe
+{% endblock %}
+
+{% block content %}
+
+<h1>Edit Recipe</h1>
+
+<form method="POST" enctype="multipart/form-data">
+
+    <label for="title">Title:</label><br>
+    <input
+        type="text"
+        id="title"
+        name="title"
+        value="{{ recipe.title }}"
+        required
+    >
+    <br><br>
+
+    <label for="category">Category:</label><br>
+    <input
+        type="text"
+        id="category"
+        name="category"
+        value="{{ recipe.category }}"
+    >
+    <br><br>
+
+    <div class="time-inputs">
+
+      <div>
+          <label for="cook_hours">Cook Time — Hours</label>
+
+          <input
+              type="number"
+              id="cook_hours"
+              name="cook_hours"
+              min="0"
+              value="{{ cook_hours }}"
+              required
+          >
+      </div>
+
+      <div>
+          <label for="cook_minutes">Minutes</label>
+
+          <input
+              type="number"
+              id="cook_minutes"
+              name="cook_minutes"
+              min="0"
+              max="59"
+              value="{{ cook_minutes }}"
+              required
+          >
+      </div>
+
+      <label>Rating</label>
+
+      <div class="star-rating">
+
+        {% for value in range(5, 0, -1) %}
+            <input
+                type="radio"
+                id="star-{{ value }}"
+                name="rating"
+                value="{{ value }}"
+                {% if recipe.rating == value %}checked{% endif %}
+            >
+
+            <label
+                for="star-{{ value }}"
+                title="{{ value }} stars"
+            >
+                ★
+            </label>
+
+        {% endfor %}
+
+      </div>
+
+      </div>
+    <br><br>
+
+    <label for="ingredients">Ingredients:</label><br>
+    <textarea
+        id="ingredients"
+        name="ingredients"
+        rows="8"
+        cols="50"
+    >{{ recipe.ingredients }}</textarea><br><br>
+
+    <label for="instructions">Instructions:</label><br>
+    <textarea
+        id="instructions"
+        name="instructions"
+        rows="10"
+        cols="50"
+    >{{ recipe.instructions }}</textarea><br><br>
+
+    <div class="form-group">
+
+        <label for="photo">Recipe Photo</label>
+
+        {% if recipe.photo_filename %}
+
+            <div class="current-photo-preview">
+
+                <p>Current photo:</p>
+
+                <img
+                    src="{{ url_for(
+                        'static',
+                        filename='uploads/' + recipe.photo_filename
+                    ) }}"
+                    alt="{{ recipe.title }}"
+                    class="edit-recipe-photo"
+                >
+
+            </div>
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="remove_photo"
+                    value="1"
+                >
+
+                Remove current photo
+
+            </label>
+
+        {% endif %}
+
+        <input
+            type="file"
+            id="photo"
+            name="photo"
+            accept=".jpg,.jpeg,.png,.webp,image/*"
+        >
+
+        {% if recipe.photo_filename %}
+            <p class="form-help">
+                Select a new image to replace the current photo.
+            </p>
+        {% endif %}
+
+    </div>
+
+    <button type="submit">Save Changes</button>
+
+</form>
+
+<br>
+
+<a href="/recipe/{{ recipe.id }}">Cancel</a>
+
+{% endblock %}

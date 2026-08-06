@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}
+Import Recipe
+{% endblock %}
+
+{% block content %}
+
+<h1>Import Recipe</h1>
+
+<p>
+    Upload one or more recipe images. Select the pages in order,
+    starting with page 1.
+</p>
+
+{% if error %}
+    <p class="error-message">
+        {{ error }}
+    </p>
+{% endif %}
+
+<form
+    id="import-form"
+    method="POST"
+    action="{{ url_for('import_recipe') }}"
+    enctype="multipart/form-data"
+>
+
+    <input
+        id="recipe-files"
+        type="file"
+        name="recipe_files"
+        accept=".jpg,.jpeg,.png,.webp"
+        multiple
+        required
+    >
+
+    <p class="form-help">
+        Hold Ctrl while clicking to select multiple images.
+    </p>
+
+    <button type="submit">
+        Upload Recipe
+    </button>
+
+</form>
+
+<div
+    id="import-loading-overlay"
+    class="import-loading-overlay"
+    hidden
+>
+    <div class="import-loading-box">
+
+        <div class="import-spinner"></div>
+
+        <h2>Importing Your Recipe</h2>
+
+        <p id="import-loading-message">
+            📤 Uploading your recipe images...
+        </p>
+
+        <p
+            id="import-file-message"
+            class="import-loading-note"
+        ></p>
+
+        <p class="import-loading-note">
+            Please keep this page open while the recipe is processed.
+        </p>
+
+    </div>
+</div>
+
+
+
+<script>
+    const importForm = document.getElementById("import-form");
+    const recipeFilesInput = document.getElementById("recipe-files");
+
+    const loadingOverlay = document.getElementById(
+        "import-loading-overlay"
+    );
+
+    const loadingMessage = document.getElementById(
+        "import-loading-message"
+    );
+
+    const fileMessage = document.getElementById(
+        "import-file-message"
+    );
+
+    if (
+        importForm &&
+        recipeFilesInput &&
+        loadingOverlay &&
+        loadingMessage &&
+        fileMessage
+    ) {
+        importForm.addEventListener("submit", function () {
+            const selectedFiles = Array.from(
+                recipeFilesInput.files
+            );
+
+            loadingOverlay.hidden = false;
+
+            const submitButton = importForm.querySelector(
+                'button[type="submit"]'
+            );
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "Importing...";
+            }
+
+            loadingMessage.textContent =
+                "📤 Uploading your recipe images...";
+
+            if (selectedFiles.length === 1) {
+                fileMessage.textContent =
+                    "1 recipe page selected";
+            } else {
+                fileMessage.textContent =
+                    `${selectedFiles.length} recipe pages selected`;
+            }
+
+            let currentPage = 0;
+
+            function showNextPage() {
+                if (currentPage >= selectedFiles.length) {
+                    loadingMessage.textContent =
+                        "🤖 AI is organizing your recipe...";
+
+                    fileMessage.textContent =
+                        "Separating the title, cook time, ingredients, " +
+                        "and instructions.";
+
+                    return;
+                }
+
+                const file = selectedFiles[currentPage];
+
+                loadingMessage.textContent =
+                    `📖 Reading page ${currentPage + 1} ` +
+                    `of ${selectedFiles.length}...`;
+
+                fileMessage.textContent = file.name;
+
+                currentPage += 1;
+
+                setTimeout(showNextPage, 2500);
+            }
+
+            setTimeout(showNextPage, 1000);
+
+            setTimeout(function () {
+                loadingMessage.textContent =
+                    "✅ Preparing your recipe for review...";
+
+                fileMessage.textContent =
+                    "Your completed form will open automatically.";
+            }, 12000);
+        });
+    }
+</script>
+
+{% endblock %}

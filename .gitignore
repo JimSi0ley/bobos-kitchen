@@ -1,0 +1,29 @@
+# Environment variables and secrets
+.env
+
+# Virtual environment
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Local databases
+*.db
+
+# Uploaded recipe photos
+static/uploads/*
+
+# Keep the uploads folder itself
+!static/uploads/.gitkeep
+
+# PyCharm files
+.idea/
+
+# Windows files
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log

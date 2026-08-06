@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}
+Recipes
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ page_heading }}</h1>
+
+{% if show_sort %}
+
+<form method="GET" class="sort-form">
+
+    <label for="sort">Sort recipes by:</label>
+
+    <select id="sort" name="sort">
+
+        <option
+            value="title_asc"
+            {% if current_sort == "title_asc" %}selected{% endif %}
+        >
+            Title: A–Z
+        </option>
+
+        <option
+            value="title_desc"
+            {% if current_sort == "title_desc" %}selected{% endif %}
+        >
+            Title: Z–A
+        </option>
+
+        <option
+            value="category"
+            {% if current_sort == "category" %}selected{% endif %}
+        >
+            Category
+        </option>
+
+        <option
+            value="cook_time_asc"
+            {% if current_sort == "cook_time_asc" %}selected{% endif %}
+        >
+            Cook Time: Shortest First
+        </option>
+
+        <option
+            value="cook_time_desc"
+            {% if current_sort == "cook_time_desc" %}selected{% endif %}
+        >
+            Cook Time: Longest First
+        </option>
+
+        <option
+            value="rating_desc"
+            {% if current_sort == "rating_desc" %}selected{% endif %}
+        >
+            Rating: Highest First
+        </option>
+
+        <option
+            value="rating_asc"
+            {% if current_sort == "rating_asc" %}selected{% endif %}
+        >
+            Rating: Lowest First
+        </option>
+
+        <option
+            value="newest"
+            {% if current_sort == "newest" %}selected{% endif %}
+        >
+            Newest Added
+        </option>
+
+        <option
+            value="oldest"
+            {% if current_sort == "oldest" %}selected{% endif %}
+        >
+            Oldest Added
+        </option>
+
+    </select>
+
+    <button type="submit">Sort</button>
+
+</form>
+
+{% endif %}
+
+
+{% for recipe in recipes %}
+
+<div class="recipe-card">
+
+    {% if recipe.photo_filename %}
+
+    <a
+        href="{{ url_for('recipe_details', recipe_id=recipe.id) }}"
+        class="recipe-card-image"
+    >
+
+        <img
+            src="{{ url_for(
+                'static',
+                filename='uploads/' + recipe.photo_filename
+            ) }}"
+            alt="{{ recipe.title }}"
+            class="recipe-thumbnail"
+        >
+
+    </a>
+
+    {% endif %}
+
+    <div class="recipe-header">
+
+        <h2>
+            <a href="{{ url_for('recipe_details', recipe_id=recipe.id) }}">
+                {{ recipe.title }}
+            </a>
+        </h2>
+
+        {% if current_user.is_authenticated %}
+
+            <form
+                action="{{ url_for(
+                    'favorite',
+                    recipe_id=recipe.id
+                ) }}"
+                method="POST"
+            >
+
+                <button
+                    class="favorite-button {% if recipe.favorite %}favorite{% endif %}"
+                    type="submit"
+                >
+
+                    {% if recipe.favorite %}
+                        ★
+                    {% else %}
+                        ☆
+                    {% endif %}
+
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    </div>
+
+    <p>
+        <strong>Category:</strong>
+
+        <a
+            href="{{ url_for(
+                'category_recipes',
+                category=recipe.category
+            ) }}"
+        >
+            {{ recipe.category }}
+        </a>
+    </p>
+
+    <p>
+    <strong>Cook Time:</strong>
+    {{ recipe.cook_time | format_cook_time }}
+    </p>
+
+    <p>
+        <strong>Rating:</strong>
+
+        {% if recipe.rating > 0 %}
+
+            {% for star in range(recipe.rating) %}
+                ⭐
+            {% endfor %}
+
+            {% for star in range(5 - recipe.rating) %}
+                ☆
+            {% endfor %}
+
+        {% else %}
+
+            Not rated
+
+        {% endif %}
+    </p>
+
+    <a
+        class="button"
+        href="{{ url_for('recipe_details', recipe_id=recipe.id) }}"
+    >
+        View Recipe
+    </a>
+
+</div>
+
+{% else %}
+
+<p>No recipes found.</p>
+
+{% endfor %}
+
+{% endblock %}

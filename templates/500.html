@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}
+Something Went Wrong
+{% endblock %}
+
+{% block content %}
+
+<div class="error-page">
+
+    <div class="error-code">
+        500
+    </div>
+
+    <h1>Something Went Wrong</h1>
+
+    <p>
+        Something went wrong in BoBo's Kitchen.
+        Please try again in a moment.
+    </p>
+
+    <div class="error-page-actions">
+
+        <a
+            class="button"
+            href="{{ url_for('home') }}"
+        >
+            Return Home
+        </a>
+
+        <a
+            class="button button-secondary"
+            href="{{ url_for('recipes') }}"
+        >
+            View Recipes
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}
