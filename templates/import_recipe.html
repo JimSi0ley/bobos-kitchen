@@ -6,51 +6,103 @@ Import Recipe
 
 {% block content %}
 
-<h1>Import Recipe</h1>
+<div class="import-page">
 
-<p>
-    Upload one or more recipe images. Select the pages in order,
-    starting with page 1.
-</p>
+    <h1>Import Recipe</h1>
 
-{% if error %}
-    <p class="error-message">
-        {{ error }}
+    <p>
+        Take a photo of a recipe or choose existing recipe photos
+        from your device.
     </p>
-{% endif %}
 
-<form
-    id="import-form"
-    method="POST"
-    action="{{ url_for('import_recipe') }}"
-    enctype="multipart/form-data"
->
+    {% if error %}
 
-    <input
-        id="recipe-files"
-        type="file"
-        name="recipe_files"
-        accept=".jpg,.jpeg,.png,.webp"
-        multiple
-        required
+        <p class="import-error">
+            {{ error }}
+        </p>
+
+    {% endif %}
+
+
+    <form
+        id="import-form"
+        method="POST"
+        enctype="multipart/form-data"
     >
 
-    <p class="form-help">
-        Hold Ctrl while clicking to select multiple images.
-    </p>
+        <div class="import-photo-options">
 
-    <button type="submit">
-        Upload Recipe
-    </button>
+            <!-- Take a new photo -->
+            <div class="import-option">
 
-</form>
+                <label
+                    for="camera-file"
+                    class="button"
+                >
+                    📷 Take Photo
+                </label>
 
-<div
-    id="import-loading-overlay"
-    class="import-loading-overlay"
-    hidden
->
-    <div class="import-loading-box">
+                <input
+                    id="camera-file"
+                    type="file"
+                    name="recipe_files"
+                    accept="image/*"
+                    capture="environment"
+                    class="hidden-file-input"
+                >
+
+            </div>
+
+
+            <!-- Choose photos already on the device -->
+            <div class="import-option">
+
+                <label
+                    for="recipe-files"
+                    class="button"
+                >
+                    🖼 Choose Existing Photos
+                </label>
+
+                <input
+                    id="recipe-files"
+                    type="file"
+                    name="recipe_files"
+                    accept="image/*"
+                    multiple
+                    class="hidden-file-input"
+                >
+
+            </div>
+
+        </div>
+
+
+        <p
+            id="selected-file-message"
+            class="form-help"
+        >
+            No recipe photos selected.
+        </p>
+
+
+        <button
+            id="upload-button"
+            type="submit"
+        >
+            Upload Recipe
+        </button>
+
+    </form>
+
+
+    <!-- Loading screen -->
+
+    <div
+        id="import-loading"
+        class="import-loading"
+        style="display: none;"
+    >
 
         <div class="import-spinner"></div>
 
@@ -70,98 +122,128 @@ Import Recipe
         </p>
 
     </div>
+
 </div>
 
 
-
 <script>
-    const importForm = document.getElementById("import-form");
-    const recipeFilesInput = document.getElementById("recipe-files");
 
-    const loadingOverlay = document.getElementById(
-        "import-loading-overlay"
-    );
+    const importForm =
+        document.getElementById("import-form");
 
-    const loadingMessage = document.getElementById(
-        "import-loading-message"
-    );
+    const cameraInput =
+        document.getElementById("camera-file");
 
-    const fileMessage = document.getElementById(
-        "import-file-message"
-    );
+    const existingPhotoInput =
+        document.getElementById("recipe-files");
 
-    if (
-        importForm &&
-        recipeFilesInput &&
-        loadingOverlay &&
-        loadingMessage &&
-        fileMessage
-    ) {
-        importForm.addEventListener("submit", function () {
-            const selectedFiles = Array.from(
-                recipeFilesInput.files
-            );
+    const selectedFileMessage =
+        document.getElementById("selected-file-message");
 
-            loadingOverlay.hidden = false;
+    const loadingScreen =
+        document.getElementById("import-loading");
 
-            const submitButton = importForm.querySelector(
-                'button[type="submit"]'
-            );
+    const loadingFileMessage =
+        document.getElementById("import-file-message");
 
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.textContent = "Importing...";
-            }
 
-            loadingMessage.textContent =
-                "📤 Uploading your recipe images...";
+    function updateSelectedFiles(input) {
 
-            if (selectedFiles.length === 1) {
-                fileMessage.textContent =
-                    "1 recipe page selected";
-            } else {
-                fileMessage.textContent =
-                    `${selectedFiles.length} recipe pages selected`;
-            }
+        const files = input.files;
 
-            let currentPage = 0;
+        if (!files || files.length === 0) {
+            selectedFileMessage.textContent =
+                "No recipe photos selected.";
 
-            function showNextPage() {
-                if (currentPage >= selectedFiles.length) {
-                    loadingMessage.textContent =
-                        "🤖 AI is organizing your recipe...";
+            return;
+        }
 
-                    fileMessage.textContent =
-                        "Separating the title, cook time, ingredients, " +
-                        "and instructions.";
-
-                    return;
-                }
-
-                const file = selectedFiles[currentPage];
-
-                loadingMessage.textContent =
-                    `📖 Reading page ${currentPage + 1} ` +
-                    `of ${selectedFiles.length}...`;
-
-                fileMessage.textContent = file.name;
-
-                currentPage += 1;
-
-                setTimeout(showNextPage, 2500);
-            }
-
-            setTimeout(showNextPage, 1000);
-
-            setTimeout(function () {
-                loadingMessage.textContent =
-                    "✅ Preparing your recipe for review...";
-
-                fileMessage.textContent =
-                    "Your completed form will open automatically.";
-            }, 12000);
-        });
+        if (files.length === 1) {
+            selectedFileMessage.textContent =
+                "1 recipe photo selected.";
+        } else {
+            selectedFileMessage.textContent =
+                files.length + " recipe photos selected.";
+        }
     }
+
+
+    cameraInput.addEventListener("change", function () {
+
+        /*
+        Clear the other input so we only submit the
+        option the user actually selected.
+        */
+
+        existingPhotoInput.value = "";
+
+        updateSelectedFiles(cameraInput);
+
+    });
+
+
+    existingPhotoInput.addEventListener("change", function () {
+
+        cameraInput.value = "";
+
+        updateSelectedFiles(existingPhotoInput);
+
+    });
+
+
+    importForm.addEventListener("submit", function (event) {
+
+        const cameraFiles = cameraInput.files;
+        const existingFiles = existingPhotoInput.files;
+
+        const hasCameraPhoto =
+            cameraFiles && cameraFiles.length > 0;
+
+        const hasExistingPhotos =
+            existingFiles && existingFiles.length > 0;
+
+
+        if (!hasCameraPhoto && !hasExistingPhotos) {
+
+            event.preventDefault();
+
+            selectedFileMessage.textContent =
+                "Please take or select at least one recipe photo.";
+
+            return;
+        }
+
+
+        importForm.style.display = "none";
+
+        loadingScreen.style.display = "block";
+
+
+        let fileCount = 0;
+
+        if (hasCameraPhoto) {
+            fileCount = cameraFiles.length;
+        }
+
+        if (hasExistingPhotos) {
+            fileCount = existingFiles.length;
+        }
+
+
+        if (fileCount === 1) {
+
+            loadingFileMessage.textContent =
+                "Reading 1 recipe image...";
+
+        } else {
+
+            loadingFileMessage.textContent =
+                "Reading " + fileCount + " recipe images...";
+
+        }
+
+    });
+
 </script>
 
 {% endblock %}

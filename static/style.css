@@ -1056,3 +1056,37 @@ button:hover,
         margin: 0 auto;
     }
 }
+
+/* Import recipe photo options */
+
+.import-photo-options {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.import-option {
+    display: inline-block;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+@media (max-width: 650px) {
+    .import-photo-options {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .import-option {
+        width: 100%;
+        text-align: center;
+    }
+
+    .import-option .button {
+        display: inline-block;
+        cursor: pointer;
+    }
+}
