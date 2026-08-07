@@ -32,10 +32,14 @@ class AdminUser(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
+
     admin_username = os.getenv("ADMIN_USERNAME")
 
-    if user_id == admin_username:
-        return AdminUser(user_id)
+    if (
+        admin_username
+        and user_id.lower() == admin_username.lower()
+    ):
+        return AdminUser(admin_username)
 
     return None
 
@@ -75,7 +79,7 @@ def login():
         ):
 
             login_user(
-                AdminUser(username)
+                AdminUser(os.getenv("ADMIN_USERNAME"))
             )
 
             next_page = request.args.get("next")
