@@ -1,8 +1,8 @@
 import sqlite3
-from functions import connect_to_db
+from functions import connect_to_db, get_database_path
 
 def create_database():
-    connection = sqlite3.connect("recipes.db")
+    connection = sqlite3.connect(get_database_path())
 
     cursor = connection.cursor()
 

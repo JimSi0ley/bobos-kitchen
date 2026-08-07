@@ -112,12 +112,10 @@ Edit Recipe
                 <p>Current photo:</p>
 
                 <img
-                    src="{{ url_for(
-                        'static',
-                        filename='uploads/' + recipe.photo_filename
-                    ) }}"
-                    alt="{{ recipe.title }}"
-                    class="edit-recipe-photo"
+                src="{{ url_for(
+                    'uploaded_file',
+                    filename=recipe.photo_filename
+                  ) }}"
                 >
 
             </div>

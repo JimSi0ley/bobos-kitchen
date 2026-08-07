@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from database import create_database, add_favorite_column, add_photo_column, add_rating_column
 from functions_web import add_recipe, get_recipe, get_all_recipes, delete_recipe, update_recipe, search_recipe, get_recipes_by_category, toggle_favorite, get_favorite_recipes, get_random_recipe, update_recipe_photo
@@ -105,7 +105,21 @@ def logout():
         url_for("home")
     )
 
-UPLOAD_FOLDER = os.path.join("static", "uploads")
+if os.getenv("RENDER"):
+    UPLOAD_FOLDER = os.path.join(
+        "/opt/render/project/src/storage",
+        "uploads"
+    )
+else:
+    UPLOAD_FOLDER = os.path.join(
+        "static",
+        "uploads"
+    )
+
+os.makedirs(
+    UPLOAD_FOLDER,
+    exist_ok=True
+)
 
 ALLOWED_EXTENSIONS = {
     "png",
@@ -163,6 +177,13 @@ def save_recipe_photo(recipe_id, photo):
     )
 
     return filename
+
+@app.route("/uploads/<filename>")
+def uploaded_file(filename):
+    return send_from_directory(
+        app.config["UPLOAD_FOLDER"],
+        filename
+    )
 
 app.jinja_env.filters["format_cook_time"] = format_cook_time
 

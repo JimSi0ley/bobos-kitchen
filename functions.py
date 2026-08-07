@@ -1,17 +1,21 @@
 import sqlite3
+import os
+
+
+def get_database_path():
+    if os.getenv("RENDER"):
+        return "/opt/render/project/src/storage/recipes.db"
+
+    return "recipes.db"
 
 
 def connect_to_db():
-    connection = sqlite3.connect("recipes.db")
+    connection = sqlite3.connect(get_database_path())
     connection.row_factory = sqlite3.Row
 
     cursor = connection.cursor()
 
     return connection, cursor
-
-
-
-
 
 
 
