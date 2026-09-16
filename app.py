@@ -5,7 +5,7 @@ from functions_web import add_recipe, get_recipe, get_all_recipes, delete_recipe
 from utils import format_cook_time
 import os
 from dotenv import load_dotenv
-from recipe_parser import parse_recipe_images
+from recipe_parser import parse_recipe_files, RecipeUploadError, MAX_IMPORT_BYTES
 from urllib.parse import urljoin, urlparse
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
@@ -424,6 +424,13 @@ def import_recipe():
 
     if request.method == "POST":
 
+        # Allow a little room for multipart form headers.
+        if request.content_length and request.content_length > MAX_IMPORT_BYTES + 1024 * 1024:
+            return render_template(
+                "import_recipe.html",
+                error="Select files totaling 20 MB or less."
+            ), 413
+
         recipe_files = request.files.getlist("recipe_files")
 
         recipe_files = [
@@ -437,7 +444,7 @@ def import_recipe():
                 "import_recipe.html",
                 extracted_text=None,
                 extracted_pages=None,
-                error="Please select at least one recipe image."
+                error="Please select at least one recipe image or PDF."
             )
 
         for page_number, recipe_file in enumerate(
@@ -448,26 +455,32 @@ def import_recipe():
             lowercase_filename = filename.lower()
 
             if not lowercase_filename.endswith(
-                (".jpg", ".jpeg", ".png", ".webp")
+                (".jpg", ".jpeg", ".png", ".webp", ".pdf")
             ):
                 return render_template(
                     "import_recipe.html",
                     extracted_text=None,
                     extracted_pages=None,
                     error=(
-                        f'"{filename}" is not a supported image format. '
-                        "Please upload JPG, JPEG, PNG, or WEBP files."
+                        f'"{filename}" is not a supported file format. '
+                        "Please upload JPG, JPEG, PNG, WEBP, or PDF files."
                     )
                 )
 
         try:
-            parsed_recipe = parse_recipe_images(
+            parsed_recipe = parse_recipe_files(
                 recipe_files
             )
 
+        except RecipeUploadError as error:
+            return render_template(
+                "import_recipe.html",
+                error=str(error)
+            ), 400
+
         except ValueError as error:
             app.logger.exception(
-                "Recipe image import failed: %s",
+                "Recipe file import failed: %s",
                 error
             )
 
@@ -477,14 +490,14 @@ def import_recipe():
                 extracted_pages=None,
                 error=(
                     "BoBo's Kitchen could not read and organize those "
-                    "recipe images. Make sure the pages are clear, upright, "
-                    "and selected in the correct order."
+                    "recipe files. Make sure the pages are readable and in "
+                    "the correct order. PDFs must open without a password."
                 )
             )
 
         except Exception:
             app.logger.exception(
-                "Unexpected recipe image import error."
+                "Unexpected recipe file import error."
             )
 
             return render_template(

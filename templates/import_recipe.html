@@ -9,8 +9,8 @@ Import Recipe
 <h1>Import Recipe</h1>
 
 <p>
-    Take photos of a recipe or choose existing recipe photos
-    from your device.
+    Take photos of a recipe, choose existing photos, or upload a PDF.
+    Add files for one recipe in page order (20 MB total maximum).
 </p>
 
 {% if error %}
@@ -30,14 +30,14 @@ Import Recipe
 
     <!--
         This is the file input that actually gets submitted
-        to Flask. It can contain multiple recipe photos.
+        to Flask. It can contain multiple recipe images and PDFs.
     -->
 
     <input
         id="recipe-files"
         type="file"
         name="recipe_files"
-        accept="image/*"
+        accept="image/*,application/pdf,.pdf"
         multiple
         class="hidden-file-input"
     >
@@ -88,6 +88,17 @@ Import Recipe
 
         </div>
 
+        <div class="import-option">
+            <label for="pdf-library" class="button">📄 Choose PDF</label>
+            <input
+                id="pdf-library"
+                type="file"
+                accept="application/pdf,.pdf"
+                multiple
+                class="hidden-file-input"
+            >
+        </div>
+
     </div>
 
 
@@ -95,7 +106,7 @@ Import Recipe
         id="selected-file-message"
         class="form-help"
     >
-        No recipe photos selected.
+        No recipe files selected.
     </p>
 
 
@@ -122,7 +133,7 @@ Import Recipe
     <h2>Importing Your Recipe</h2>
 
     <p id="import-loading-message">
-        📤 Uploading your recipe images...
+        📤 Uploading your recipe files...
     </p>
 
     <p
@@ -162,40 +173,40 @@ Import Recipe
 
 
     /*
-        This stores all of the photos that will
+        This stores all of the files that will
         eventually be submitted to Flask.
     */
 
-    let selectedPhotos = new DataTransfer();
+    let selectedFiles = new DataTransfer();
 
 
     function updateFiles() {
 
         recipeFilesInput.files =
-            selectedPhotos.files;
+            selectedFiles.files;
 
         const count =
-            selectedPhotos.files.length;
+            selectedFiles.files.length;
 
 
         if (count === 0) {
 
             selectedFileMessage.textContent =
-                "No recipe photos selected.";
+                "No recipe files selected.";
 
         }
 
         else if (count === 1) {
 
             selectedFileMessage.textContent =
-                "1 recipe photo selected. Take another photo if needed.";
+                "1 recipe file selected. Add another page if needed.";
 
         }
 
         else {
 
             selectedFileMessage.textContent =
-                count + " recipe photos selected.";
+                count + " recipe files selected.";
 
         }
 
@@ -222,7 +233,7 @@ Import Recipe
                     const file of cameraInput.files
                 ) {
 
-                    selectedPhotos.items.add(file);
+                    selectedFiles.items.add(file);
 
                 }
 
@@ -262,7 +273,7 @@ Import Recipe
                     const file of photoLibraryInput.files
                 ) {
 
-                    selectedPhotos.items.add(file);
+                    selectedFiles.items.add(file);
 
                 }
 
@@ -277,6 +288,15 @@ Import Recipe
     );
 
 
+    const pdfLibraryInput = document.getElementById("pdf-library");
+    pdfLibraryInput.addEventListener("change", function () {
+        for (const file of pdfLibraryInput.files) {
+            selectedFiles.items.add(file);
+        }
+        updateFiles();
+        pdfLibraryInput.value = "";
+    });
+
     /*
         FORM SUBMISSION
     */
@@ -286,7 +306,7 @@ Import Recipe
         function (event) {
 
             const fileCount =
-                selectedPhotos.files.length;
+                selectedFiles.files.length;
 
 
             if (fileCount === 0) {
@@ -294,7 +314,7 @@ Import Recipe
                 event.preventDefault();
 
                 selectedFileMessage.textContent =
-                    "Please take or select at least one recipe photo.";
+                    "Please take or select at least one recipe photo or PDF.";
 
                 return;
 
@@ -307,8 +327,17 @@ Import Recipe
                 Flask file input.
             */
 
+            const totalBytes = Array.from(selectedFiles.files)
+                .reduce((total, file) => total + file.size, 0);
+            if (totalBytes > 20 * 1024 * 1024) {
+                event.preventDefault();
+                selectedFileMessage.textContent =
+                    "Select files totaling 20 MB or less. Reload this page to start over.";
+                return;
+            }
+
             recipeFilesInput.files =
-                selectedPhotos.files;
+                selectedFiles.files;
 
 
             /*
@@ -326,7 +355,7 @@ Import Recipe
             if (fileCount === 1) {
 
                 importFileMessage.textContent =
-                    "Reading 1 recipe image...";
+                    "Reading 1 recipe file...";
 
             }
 
@@ -335,7 +364,7 @@ Import Recipe
                 importFileMessage.textContent =
                     "Reading " +
                     fileCount +
-                    " recipe images...";
+                    " recipe files...";
 
             }
 
